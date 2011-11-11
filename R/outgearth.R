@@ -1,42 +1,37 @@
-`outgearth` <-
-function(x, dn, outfile = "namgearth.kml") {
-  if (is.null(class(x)) | class(x) != "nam") {
-        cat("Argument is not of class 'nam' \n")
+outgearth <- function(partition, showlabel = FALSE)
+{
+    require(tcltk) || stop("The tcltk support is absent")
+    if (is.null(class(partition)) | class(partition) != "nampartition") {
+        cat("Argument is not of class 'nampartition' \n")
         return(invisible())
-  }
-  if (is.null(class(dn)) | class(dn) != "dnpoint") {
-        cat("Argument is not of class 'dnpoint' \n")
-        return(invisible())
-  }
-  if (!all(x$Categories[,1]==dn$Label)) {
-     cat("Error: label vectors of input arguments do not match\n")
-     return(invisible())
-  }
-  
-  # open an output file connection
-  if (is.character(outfile)) 
-        if (outfile == "namgearth.kml") 
-            zz <- file(outfile, "w")
-        else {
-            outfile <- paste(outfile, ".kml", sep ="")
-            zz <- file(outfile, "w")
+    }
+    filename <- tclvalue(tkgetSaveFile(initialfile = "output_gearth.kml",
+                        defaultextension = ".kml", title = "Save marked point sets into KML file...",
+                        filetypes = "{KML {.kml}} {{All Files} {*.*}}"))
+    if (filename == "") return()
+    zz <- file(filename, "w")
+    aux <- split(partition$status[,1], partition$status[,2])
+    naux <- names(aux)
+    cat("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n", file = zz)
+    cat("<kml xmlns = \"http://earth.google.com/kml/2.1\">\n", file = zz)
+    cat("<Document>\n", file = zz)
+    cat("<name>", "NAM classification", "</name>\n", file = zz)
+    a <- "<Placemark>\n<name>"
+    b <- "</name>\n<Point>\n<coordinates>"
+    c <- ", 0</coordinates>\n</Point>\n<description><![CDATA["
+    d <- "]]></description>\n</Placemark>\n"
+    for (i in 1:length(aux)) {
+      cat("<Folder>\n", file = zz)
+      cat("<name>", naux[i],"</name>",sep = "", file = zz)
+      if(showlabel) label <- naux[i] else label <- ""
+        for(j in aux[[i]]) {
+          for(k in partition$occupancy[[j]]) {
+            cat(a, label , b, partition$coords[k,1], ", ",
+              partition$coords[k,2], c, j, d, sep = "", file = zz)
+          }
         }
-  
-  # put the file header
-  cat("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>", "<kml xmlns = \"http://earth.google.com/kml/2.0\">", "<Document>", sep = "\n", file = zz)
-  # set the document name
-  cat("   <name>", "From NAM to KML", "</name>\n", sep ="", file = zz)
-  a <- "   <Placemark>\n       <name>"
-  b <- "</name>\n       <Point>\n         <coordinates>"
-  c <- ", 0</coordinates>\n      </Point>\n      <description><![CDATA["
-  d <- "]]></description>\n   </Placemark>\n"
-  for (i in 1:dn$Numpoints) {
-    #create a placemark
-    cat(a, x$Categories[dn$Points[i,1], 2], b, dn$Points[i,2], ", ", dn$Points[i,3], c ,dn$Label[dn$Points[i,1]], d, sep = "", file = zz)
-  }
-  #put the file footer
-  cat("</Document>\n</kml>", file = zz)
-  close(zz)
-  cat("The generated file", outfile, "was located in the following path: ", "\n", getwd(), "\n")  
+      cat("</Folder>\n", file = zz)
+    }
+    cat("</Document>\n</kml>", file = zz)
+    close(zz)
 }
-

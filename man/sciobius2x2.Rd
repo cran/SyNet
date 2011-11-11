@@ -3,31 +3,31 @@
 \docType{data}
 \title{Sciobius Grid Occupancy Data}
 \description{
-  Presence/absence data of 47 South African \emph{Sciobius} species along a square 
+  Presence/absence data of 47 South African species of weevils over a squared 
   grid of 2 x 2 degrees.
 }
 \usage{data(sciobius2x2)}
 \format{
-  A data frame with 47 observations on 25 grid cells.
+  A data frame with 49 observations on 25 columns. Columns are the grid cells in the
+  study area (South Africa). The first pair of rows correspond to the coordinates of cells
+  in the grid system (i.e. numeric indices of the cells in the rectangular layout of the grid).
+
+  The rest of rows are the species. Presence is indicated with 1 and absence with 0.
 }
 \details{
- Original matrix is derived from Morrone (1994). An ulterior correction is introduced
- by Mast and Nyffeler (2003). We refer to this last version. Moreover, we adopt the 
- same codification of species names. 
+ Morrone (1994) provides the original matrix for this classical example, but ulterior
+ corrections are introduced by Mast and Nyffeler (2003). The corrected version of 
+ the data are here represented. Species names are coded through two letters following the
+ nomclature of Mast and Nyffeler (2003). 
 }
 \source{
-  Morrone, J. J. 1994. \emph{On the identification of areas of endemism.} Syst. Biol. 43:438-441.
-
-  Mast, A. R., and R. Nyffeler. 2003. \emph{Using a null model to recognize significant co-
-  occurrence prior to identifying candidate areas of endemism.} Syst. Biol.  52:271-280.
+  Schoeman, A. S. 1983. \emph{Revision of the Genus Sciobius Schonherr (Coleoptera: Curculionidae).}
+  Entomol. Mem. Dep. Agric. Repub. S. Afr. 59:1-50.
 }
-\examples{
-# Apply NAM analysis on Sciobius data set.
-data(sciobius2x2)
-fornam <- gridinfer(dntable = sciobius2x2)
-namsc <- nam(fornam)
-# Obtain the species belonging to each unit of co-occurrence
-split(namsc$Categories[,1], namsc$Categories[,2])
+\references{
+  Morrone, J. J. 1994. \emph{On the Identification of Areas of Endemism.} Syst. Biol. 43:438-441.
 
+  Mast, A. R., and R. Nyffeler. 2003. \emph{Using a Null Model to Recognize Significant Co-
+  occurrence Prior to Identifying Candidate Areas of Endemism.} Syst. Biol. 52:271-280.
 }
 \keyword{datasets}

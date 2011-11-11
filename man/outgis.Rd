@@ -1,42 +1,80 @@
 \name{outgis}
 \alias{outgis}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{ Generating Files for GIS Softwares }
+\title{Generate a TXT File with Marked Set of Points}
 \description{
-  Generates a .txt file that can be imported by GIS softwares (e.g. DIVA-GIS)
-  in order to convert the data in a shapefile of points.   
+  Generates a .txt file that can be imported by GIS softwares (e.g. DIVA-GIS).
+  The output corresponds to a data set of records classified by the NAM algorithm. 
 }
-\usage{
-  outgis(x, dn, outfile = "namgis.txt")
-}
+\usage{outgis(partition)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{x}{ Objetc of class 'nam'. }
-  \item{dn}{ Object of class 'dnpoint'. }
-  \item{outfile}{ A character string naming the .txt file to write to.  }
+  \item{partition}{Object of class \code{nampartition}.}
 }
 \details{
-  The generated file has four fields separated by comma: Species Label, Longitude,
-  Latitude and NAM Status. The first line of file contains the field labels. From
-  second line on, respective field information.  
+  The generated file has four fields separated by commas: Label, X_Long,
+  Y_Lat and NAMClass. The first line of the file corresponds to the headers. 
 }
-\author{ Daniel A. Dos Santos }
+\author{Daniel A. Dos Santos <dadossantos@csnat.unt.edu.ar>}
 \note{ 
-  DIVA-GIS is a free software widely used in biogeographical research. For DIVA-GIS
-  users, the generated .txt file can be opened from menu DATA -> IMPORT POINTS TO SHAPEFILE
-  -> FROM TEXT FILE (.TXT). 
+  Almost the totality of GIS softwares may convert our output into
+  a shapefile of points. Particularly, DIVA-GIS users can open the generated .txt file
+  via the menu DATA -> IMPORT POINTS TO SHAPEFILE -> FROM TEXT FILE (.TXT). 
 }
 \seealso{
   The homepage of DIVA-GIS is at \url{http://www.diva-gis.org/}.\cr
-  Function \code{\link{nam}} for generating objects of 'nam' class.\cr 
-  Function \code{\link{read.coord}} for reading records and generating objects of 
-  class \code{'dnpoint'}.
+  Function \code{\link{cleavogram}} assists us for creating objects of class 
+  \code{nampartition}. 
+  The example developed below can be found also in the documentation for 
+  function \code{\link{outgearth}}.
 }
 \examples{
-data(epiphragmophora)
-p <- dotinfer(epiphragmophora)
-x <- nam(p)
-outgis(x, epiphragmophora) ##See the file in the working directory
+  #This example is driven by a new idea of a sympatry network partitioning.
+  #We will implement an algorithm based on the cliques found on the network and 
+  #we will export the final classification into a txt file with fields separated by commas. 
+  #######
+  #Step 1: Infer the network of co-extensive sympatry in the Sciobius example:  
+  data(sciobius2x2)
+  aux <- gridinfer(dntable = sciobius2x2)
+  #######
+  #Step 2: Obtain the cliques
+  cliques <- netproperties(aux$sm)$Cliques
+  #######
+  #Step 3: Perform the new alogrithm on the data frame of cliques (1/0 table of species
+  #by cliques). Here, the maximum clique is selected and its members removed from the 
+  #data frame. This task is repeated until no residual group can be extracted. 
+  inc <- apply(cliques, 1, sum) #Number of cliques where a given species occurs
+  flag <- sum(cliques)  
+  i <- 1 #counter
+  classes <- rep(NA, nrow(aux$sm))
+  while(flag > 0){
+    size <- apply(cliques, 2, sum) #Size of each clique
+    clsel <- which.max(size) #Identify a single largest clique  
+    members <- which(cliques[,clsel]==1)
+    flag <- flag - sum(inc[members])
+    inc[members] <- 0
+    cliques[members,] <- 0 #Indirect way for removing species already classified
+    classes[members] <- paste("Group_", i) 
+    i <- i + 1
+  }
+  split(aux$Label, classes) #Print on R console the resulting partition
+  #######
+  #Step 3: Create an object of class nampartition by hand and . 
+  rslt <- c()
+  rslt$kind <- "grids"
+  rslt$status <- cbind(Taxa = aux$Label, Status = classes)
+  rslt$occupancy <- aux$occupancy
+  #Next, set coordinates in function of the geographical centre for each cell used in the 
+  #Sciobius' example
+  rslt$coords <-  matrix(c(14, -20),  nrow = nrow(aux$coords), ncol = 2, byrow = TRUE) + 
+                  matrix(c(2, -2), nrow = nrow(aux$coords), ncol = 2, byrow = TRUE)*aux$coords  
+  class(rslt) <- "nampartition"
+  #######
+  #Step 4: Create the txt file which is easily converted in to a shapefile 
+  #by any professional GIS software.
+  \dontrun{
+  outgis(rslt)
+  } 
 }
-\keyword{ file }
+\keyword{file}
 
